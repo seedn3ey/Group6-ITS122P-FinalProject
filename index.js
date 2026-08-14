@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const addAccountBtn = document.querySelector('.actionButtons button:nth-child(1)');
   const addTransactionBtn = document.querySelector('.actionButtons button:nth-child(2)');
   const viewLogsBtn = document.querySelector('.actionButtons button:nth-child(3)');
+  const deleteAccountBtn = document.querySelector('.actionButtons button:nth-child(4)');
   const container = document.querySelector('.container');
 
   let accounts = [];
@@ -302,6 +303,73 @@ document.addEventListener('DOMContentLoaded', () => {
     modal.appendChild(balance);
     modal.appendChild(logList);
     modal.appendChild(closeBtn);
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+  }
+
+  // ============================================================
+  // DELETE ACCOUNT
+  // ============================================================
+  deleteAccountBtn.addEventListener('click', () => {
+    if (accounts.length === 0) {
+      alert('There are no accounts to delete.');
+      return;
+    }
+    openDeleteAccountPicker();
+  });
+
+  function openDeleteAccountPicker() {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+
+    const heading = document.createElement('h3');
+    heading.textContent = 'Delete Account';
+
+    const select = document.createElement('select');
+    accounts.forEach(account => {
+      const option = document.createElement('option');
+      option.value = account.id;
+      option.textContent = account.name;
+      select.appendChild(option);
+    });
+
+    const warning = document.createElement('p');
+    warning.className = 'card-text delete-warning';
+    warning.textContent = 'This will permanently delete the account and all its transactions.';
+
+    const confirmBtn = document.createElement('button');
+    confirmBtn.className = 'card-button delete';
+    confirmBtn.textContent = 'Delete Account';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'card-button cancel';
+    cancelBtn.textContent = 'Cancel';
+
+    confirmBtn.addEventListener('click', () => {
+      const accountId = parseInt(select.value);
+      const account = accounts.find(a => a.id === accountId);
+
+      const confirmed = confirm(`Are you sure you want to delete "${account.name}"? This cannot be undone.`);
+      if (!confirmed) return;
+
+      accounts = accounts.filter(a => a.id !== accountId);
+
+      renderAccounts();
+      document.body.removeChild(overlay);
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      document.body.removeChild(overlay);
+    });
+
+    modal.appendChild(heading);
+    modal.appendChild(select);
+    modal.appendChild(warning);
+    modal.appendChild(confirmBtn);
+    modal.appendChild(cancelBtn);
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
   }
