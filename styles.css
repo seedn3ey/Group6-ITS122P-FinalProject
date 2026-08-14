@@ -61,12 +61,13 @@ body {
   background: #ffffff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border: 1px solid #eaeaea;
+  cursor: pointer;
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .card:hover {
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+  transform: translateY(-3px);
 }
 
 .card-title {
@@ -139,6 +140,13 @@ body {
 
 .card-transactions li.expense {
   color: #dc2626;
+}
+
+.card-more {
+  font-style: italic;
+  color: #2563eb;
+  font-weight: 500;
+  border-bottom: none !important;
 }
 
 /* ---- Modal (Add Transaction / View Logs / Account Picker) ---- */

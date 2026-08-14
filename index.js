@@ -17,6 +17,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const card = document.createElement('div');
       card.className = 'card';
 
+      // Clicking the card opens the full transaction log for this account
+      card.addEventListener('click', () => {
+        openLogsView(account);
+      });
+
       const title = document.createElement('h3');
       title.className = 'card-title';
       title.textContent = account.name;
@@ -35,13 +40,25 @@ document.addEventListener('DOMContentLoaded', () => {
         empty.textContent = 'No transactions yet.';
         txList.appendChild(empty);
       } else {
-        account.transactions.forEach(tx => {
+        // Show only the 3 most recent transactions on the card
+        const recentTx = [...account.transactions]
+          .sort((a, b) => b.date - a.date)
+          .slice(0, 3);
+
+        recentTx.forEach(tx => {
           const item = document.createElement('li');
           const sign = tx.type === 'income' ? '+' : '-';
           item.textContent = `${tx.description}: ${sign}$${tx.amount.toFixed(2)}`;
           item.classList.add(tx.type);
           txList.appendChild(item);
         });
+
+        if (account.transactions.length > 3) {
+          const more = document.createElement('li');
+          more.className = 'card-text card-more';
+          more.textContent = `+ ${account.transactions.length - 3} more — click to view all`;
+          txList.appendChild(more);
+        }
       }
 
       card.appendChild(title);
