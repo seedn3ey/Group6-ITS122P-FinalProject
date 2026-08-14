@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let accountIdCounter = 0;
 
   // ============================================================
-  // RENDER ACCOUNTS (source of truth -> DOM)
+  // RENDER ACCOUNTS
   // ============================================================
   function renderAccounts() {
     container.innerHTML = '';
@@ -19,9 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
       card.className = 'card';
 
       // Clicking the card opens the full transaction log for this account
-      card.addEventListener('click', () => {
-        openLogsView(account);
-      });
+      card.addEventListener('click', () => { openLogsView(account); });
 
       const title = document.createElement('h3');
       title.className = 'card-title';
@@ -40,7 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
         empty.className = 'card-text';
         empty.textContent = 'No transactions yet.';
         txList.appendChild(empty);
-      } else {
+      } 
+      
+      else {
         // Show only the 3 most recent transactions on the card
         const recentTx = [...account.transactions]
           .sort((a, b) => b.date - a.date)
@@ -67,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
       card.appendChild(txList);
       container.appendChild(card);
     });
+    
   }
 
   // ============================================================
