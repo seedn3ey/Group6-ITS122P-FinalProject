@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let accountIdCounter = 0;
 
   // ============================================================
-  // RENDER ACCOUNTS
+  // RENDER ACCOUNTS (source of truth -> DOM)
   // ============================================================
   function renderAccounts() {
     container.innerHTML = '';
@@ -19,7 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
       card.className = 'card';
 
       // Clicking the card opens the full transaction log for this account
-      card.addEventListener('click', () => { openLogsView(account); });
+      card.addEventListener('click', () => {
+        openLogsView(account);
+      });
 
       const title = document.createElement('h3');
       title.className = 'card-title';
@@ -38,9 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         empty.className = 'card-text';
         empty.textContent = 'No transactions yet.';
         txList.appendChild(empty);
-      } 
-      
-      else {
+      } else {
         // Show only the 3 most recent transactions on the card
         const recentTx = [...account.transactions]
           .sort((a, b) => b.date - a.date)
@@ -67,7 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
       card.appendChild(txList);
       container.appendChild(card);
     });
-    
   }
 
   // ============================================================
@@ -259,17 +258,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const logList = document.createElement('ul');
     logList.className = 'logs-list';
 
-    if (account.transactions.length === 0) {
-      const empty = document.createElement('li');
-      empty.className = 'card-text';
-      empty.textContent = 'No transactions recorded for this account.';
-      logList.appendChild(empty);
-    } else {
+    function renderLogList() {
+      logList.innerHTML = '';
+
+      if (account.transactions.length === 0) {
+        const empty = document.createElement('li');
+        empty.className = 'card-text';
+        empty.textContent = 'No transactions recorded for this account.';
+        logList.appendChild(empty);
+        return;
+      }
+
       const sorted = [...account.transactions].sort((a, b) => b.date - a.date);
 
       sorted.forEach(tx => {
         const item = document.createElement('li');
         item.className = `log-entry ${tx.type}`;
+
+        const infoWrapper = document.createElement('div');
+        infoWrapper.className = 'log-info';
 
         const sign = tx.type === 'income' ? '+' : '-';
         const dateStr = tx.date.toLocaleString();
@@ -286,12 +293,43 @@ document.addEventListener('DOMContentLoaded', () => {
         date.className = 'log-date';
         date.textContent = dateStr;
 
-        item.appendChild(desc);
-        item.appendChild(amt);
-        item.appendChild(date);
+        infoWrapper.appendChild(desc);
+        infoWrapper.appendChild(amt);
+        infoWrapper.appendChild(date);
+
+        // ---- Delete transaction button ----
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'log-delete-btn';
+        deleteBtn.textContent = '--';
+        deleteBtn.title = 'Delete this transaction';
+
+        deleteBtn.addEventListener('click', () => {
+          const confirmed = confirm(`Delete transaction "${tx.description}"? This cannot be undone.`);
+          if (!confirmed) return;
+
+          // Reverse this transaction's effect on the balance
+          account.balance += tx.type === 'income' ? -tx.amount : tx.amount;
+
+          // Remove it from the account's transaction list
+          account.transactions = account.transactions.filter(t => t !== tx);
+
+          // Refresh this modal's balance display
+          balance.textContent = `Current Balance: $${account.balance.toFixed(2)}`;
+          balance.classList.remove('positive', 'negative');
+          balance.classList.add(account.balance < 0 ? 'negative' : 'positive');
+
+          // Refresh the log list and the card overview underneath
+          renderLogList();
+          renderAccounts();
+        });
+
+        item.appendChild(infoWrapper);
+        item.appendChild(deleteBtn);
         logList.appendChild(item);
       });
     }
+
+    renderLogList();
 
     const closeBtn = document.createElement('button');
     closeBtn.className = 'card-button cancel';

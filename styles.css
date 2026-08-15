@@ -263,3 +263,35 @@ body {
   color: #dc2626;
   font-size: 0.8rem;
 }
+
+.log-entry {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.log-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.log-delete-btn {
+  flex-shrink: 0;
+  border: none;
+  background: #fee2e2;
+  color: #dc2626;
+  font-weight: 700;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.log-delete-btn:hover {
+  background: #fecaca;
+}
