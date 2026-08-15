@@ -258,6 +258,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const logList = document.createElement('ul');
     logList.className = 'logs-list';
 
+    function refreshBalanceDisplay() {
+      balance.textContent = `Current Balance: $${account.balance.toFixed(2)}`;
+      balance.classList.remove('positive', 'negative');
+      balance.classList.add(account.balance < 0 ? 'negative' : 'positive');
+    }
+
     function renderLogList() {
       logList.innerHTML = '';
 
@@ -297,7 +303,23 @@ document.addEventListener('DOMContentLoaded', () => {
         infoWrapper.appendChild(amt);
         infoWrapper.appendChild(date);
 
-        // ---- Delete transaction button ----
+        // ---- Button group: Edit + Delete ----
+        const btnGroup = document.createElement('div');
+        btnGroup.className = 'log-btn-group';
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'log-edit-btn';
+        editBtn.textContent = '✎';
+        editBtn.title = 'Edit this transaction';
+
+        editBtn.addEventListener('click', () => {
+          openEditTransactionModal(account, tx, () => {
+            refreshBalanceDisplay();
+            renderLogList();
+            renderAccounts();
+          });
+        });
+
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'log-delete-btn';
         deleteBtn.textContent = '--';
@@ -313,18 +335,16 @@ document.addEventListener('DOMContentLoaded', () => {
           // Remove it from the account's transaction list
           account.transactions = account.transactions.filter(t => t !== tx);
 
-          // Refresh this modal's balance display
-          balance.textContent = `Current Balance: $${account.balance.toFixed(2)}`;
-          balance.classList.remove('positive', 'negative');
-          balance.classList.add(account.balance < 0 ? 'negative' : 'positive');
-
-          // Refresh the log list and the card overview underneath
+          refreshBalanceDisplay();
           renderLogList();
           renderAccounts();
         });
 
+        btnGroup.appendChild(editBtn);
+        btnGroup.appendChild(deleteBtn);
+
         item.appendChild(infoWrapper);
-        item.appendChild(deleteBtn);
+        item.appendChild(btnGroup);
         logList.appendChild(item);
       });
     }
@@ -342,6 +362,98 @@ document.addEventListener('DOMContentLoaded', () => {
     modal.appendChild(balance);
     modal.appendChild(logList);
     modal.appendChild(closeBtn);
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+  }
+
+  // ============================================================
+  // EDIT TRANSACTION
+  // ============================================================
+  function openEditTransactionModal(account, tx, onSaved) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+
+    const heading = document.createElement('h3');
+    heading.textContent = 'Edit Transaction';
+
+    // Income / Expense toggle, pre-set to the transaction's current type
+    const typeWrapper = document.createElement('div');
+    typeWrapper.className = 'type-toggle';
+
+    const incomeLabel = document.createElement('label');
+    const incomeRadio = document.createElement('input');
+    incomeRadio.type = 'radio';
+    incomeRadio.name = 'editTxType';
+    incomeRadio.value = 'income';
+    incomeRadio.checked = tx.type === 'income';
+    incomeLabel.appendChild(incomeRadio);
+    incomeLabel.append(' Income');
+
+    const expenseLabel = document.createElement('label');
+    const expenseRadio = document.createElement('input');
+    expenseRadio.type = 'radio';
+    expenseRadio.name = 'editTxType';
+    expenseRadio.value = 'expense';
+    expenseRadio.checked = tx.type === 'expense';
+    expenseLabel.appendChild(expenseRadio);
+    expenseLabel.append(' Expense');
+
+    typeWrapper.appendChild(incomeLabel);
+    typeWrapper.appendChild(expenseLabel);
+
+    // Pre-fill inputs with the transaction's current values
+    const descInput = document.createElement('input');
+    descInput.type = 'text';
+    descInput.placeholder = 'Description';
+    descInput.value = tx.description;
+
+    const amountInput = document.createElement('input');
+    amountInput.type = 'number';
+    amountInput.placeholder = 'Amount';
+    amountInput.min = '0';
+    amountInput.value = tx.amount;
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'card-button';
+    saveBtn.textContent = 'Save Changes';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'card-button cancel';
+    cancelBtn.textContent = 'Cancel';
+
+    saveBtn.addEventListener('click', () => {
+      const newDescription = descInput.value.trim() || 'Unnamed transaction';
+      const newAmount = Math.abs(parseFloat(amountInput.value) || 0);
+      const newType = typeWrapper.querySelector('input[name="editTxType"]:checked').value;
+
+      // Step 1: undo the OLD transaction's effect on the balance
+      account.balance += tx.type === 'income' ? -tx.amount : tx.amount;
+
+      // Step 2: apply the NEW values' effect on the balance
+      account.balance += newType === 'income' ? newAmount : -newAmount;
+
+      // Step 3: update the transaction object itself
+      tx.description = newDescription;
+      tx.amount = newAmount;
+      tx.type = newType;
+
+      document.body.removeChild(overlay);
+      onSaved(); // tells openLogsView to refresh its balance/list, and refreshes the cards
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      document.body.removeChild(overlay);
+    });
+
+    modal.appendChild(heading);
+    modal.appendChild(typeWrapper);
+    modal.appendChild(descInput);
+    modal.appendChild(amountInput);
+    modal.appendChild(saveBtn);
+    modal.appendChild(cancelBtn);
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
   }

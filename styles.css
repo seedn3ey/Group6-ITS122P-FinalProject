@@ -295,3 +295,26 @@ body {
 .log-delete-btn:hover {
   background: #fecaca;
 }
+
+.log-btn-group {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.log-edit-btn {
+  border: none;
+  background: #dbeafe;
+  color: #2563eb;
+  font-weight: 700;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.log-edit-btn:hover {
+  background: #bfdbfe;
+}
