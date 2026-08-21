@@ -8,6 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let accounts = [];
   let accountIdCounter = 0;
 
+  // Shared list of transaction categories, used by both Add and Edit modals
+  const CATEGORIES = ['Food', 'Transportation', 'Shopping', 'Bills', 'Entertainment', 'Health', 'Salary', 'Other'];
+
   // ============================================================
   // RENDER ACCOUNTS (source of truth -> DOM)
   // ============================================================
@@ -49,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         recentTx.forEach(tx => {
           const item = document.createElement('li');
           const sign = tx.type === 'income' ? '+' : '-';
-          item.textContent = `${tx.description}: ${sign}$${tx.amount.toFixed(2)}`;
+          item.textContent = `[${tx.category}] ${tx.description}: ${sign}$${tx.amount.toFixed(2)}`;
           item.classList.add(tx.type);
           txList.appendChild(item);
         });
@@ -136,6 +139,15 @@ document.addEventListener('DOMContentLoaded', () => {
     typeWrapper.appendChild(incomeLabel);
     typeWrapper.appendChild(expenseLabel);
 
+    // ---- Category dropdown ----
+    const categorySelect = document.createElement('select');
+    CATEGORIES.forEach(cat => {
+      const option = document.createElement('option');
+      option.value = cat;
+      option.textContent = cat;
+      categorySelect.appendChild(option);
+    });
+
     const descInput = document.createElement('input');
     descInput.type = 'text';
     descInput.placeholder = 'Description';
@@ -158,9 +170,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const description = descInput.value.trim() || 'Unnamed transaction';
       const amount = Math.abs(parseFloat(amountInput.value) || 0);
       const type = typeWrapper.querySelector('input[name="txType"]:checked').value;
+      const category = categorySelect.value;
 
       const account = accounts.find(a => a.id === accountId);
-      account.transactions.push({ description, amount, type, date: new Date() });
+      account.transactions.push({ description, amount, type, category, date: new Date() });
 
       // simple math: income adds, expense subtracts
       account.balance += type === 'income' ? amount : -amount;
@@ -176,6 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
     modal.appendChild(heading);
     modal.appendChild(select);
     modal.appendChild(typeWrapper);
+    modal.appendChild(categorySelect);
     modal.appendChild(descInput);
     modal.appendChild(amountInput);
     modal.appendChild(confirmBtn);
@@ -291,6 +305,10 @@ document.addEventListener('DOMContentLoaded', () => {
         desc.className = 'log-desc';
         desc.textContent = tx.description;
 
+        const category = document.createElement('span');
+        category.className = 'log-category';
+        category.textContent = tx.category;
+
         const amt = document.createElement('span');
         amt.className = 'log-amount';
         amt.textContent = `${sign}$${tx.amount.toFixed(2)}`;
@@ -300,6 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
         date.textContent = dateStr;
 
         infoWrapper.appendChild(desc);
+        infoWrapper.appendChild(category);
         infoWrapper.appendChild(amt);
         infoWrapper.appendChild(date);
 
@@ -404,6 +423,16 @@ document.addEventListener('DOMContentLoaded', () => {
     typeWrapper.appendChild(incomeLabel);
     typeWrapper.appendChild(expenseLabel);
 
+    // ---- Category dropdown, pre-set to the transaction's current category ----
+    const categorySelect = document.createElement('select');
+    CATEGORIES.forEach(cat => {
+      const option = document.createElement('option');
+      option.value = cat;
+      option.textContent = cat;
+      if (cat === tx.category) option.selected = true;
+      categorySelect.appendChild(option);
+    });
+
     // Pre-fill inputs with the transaction's current values
     const descInput = document.createElement('input');
     descInput.type = 'text';
@@ -428,6 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const newDescription = descInput.value.trim() || 'Unnamed transaction';
       const newAmount = Math.abs(parseFloat(amountInput.value) || 0);
       const newType = typeWrapper.querySelector('input[name="editTxType"]:checked').value;
+      const newCategory = categorySelect.value;
 
       // Step 1: undo the OLD transaction's effect on the balance
       account.balance += tx.type === 'income' ? -tx.amount : tx.amount;
@@ -439,6 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
       tx.description = newDescription;
       tx.amount = newAmount;
       tx.type = newType;
+      tx.category = newCategory;
 
       document.body.removeChild(overlay);
       onSaved(); // tells openLogsView to refresh its balance/list, and refreshes the cards
@@ -450,6 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     modal.appendChild(heading);
     modal.appendChild(typeWrapper);
+    modal.appendChild(categorySelect);
     modal.appendChild(descInput);
     modal.appendChild(amountInput);
     modal.appendChild(saveBtn);

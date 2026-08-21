@@ -318,3 +318,13 @@ body {
 .log-edit-btn:hover {
   background: #bfdbfe;
 }
+
+.log-category {
+  display: inline-block;
+  font-size: 0.75rem;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 2px 8px;
+  border-radius: 999px;
+  width: fit-content;
+}
